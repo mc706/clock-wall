@@ -398,7 +398,7 @@ var clockWall = {
         this.width = this.body.offsetWidth;
         this.height = this.body.offsetHeight;
 
-        this.unit = Math.min(Math.floor(this.width / this.blockWidth), Math.floor(this.height / this.blockHeight)) - 6;
+        this.unit = Math.min(Math.floor(this.width / this.blockWidth), Math.floor(this.height / this.blockHeight)) - 2;
 
         for (var row = 0; row < this.blockHeight; row++) {
             for (var column = 0; column < this.blockWidth; column++) {
