@@ -390,7 +390,24 @@ var clockWall = {
     },
 
     start: function () {
-        setInterval(this.checkTime.bind(this), 1000);
+        this.interval = setInterval(this.checkTime.bind(this), 1000);
+    },
+
+    stop: function () {
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+    },
+
+    destroy: function () {
+        this.body.innerHTML = "";
+    },
+
+    resize: function () {
+        this.stop();
+        this.destroy();
+        this.initialize();
+        this.tick();
     },
 
     initialize: function () {
@@ -435,7 +452,11 @@ var clockWall = {
             }
         }
         this.start();
+
     }
 };
 
 clockWall.initialize();
+window.addEventListener('resize', function () {
+    clockWall.resize();
+});
