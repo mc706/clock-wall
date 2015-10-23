@@ -1,7 +1,8 @@
 var clockWall = {
     time: null,
     blockWidth: 29,
-    blockHeight: 10,
+    blockHeight: 18,
+    mode: 'time',
 
     decode: function (string) {
         return JSON.parse(atob(string));
@@ -39,13 +40,28 @@ var clockWall = {
     },
 
     getPositions: function () {
-        var commands = this.getTimePositions(this.getTime());
-        for (var row = 0; row < this.blockHeight; row++) {
-            for (var column = 0; column < this.blockWidth; column++) {
-                if (!this.checkCommandExists(commands, row, column)) {
-                    commands.push([row, column, 45, 135]);
+        var commands, row, column;
+        switch (this.mode) {
+            case "time":
+                commands = this.getTimePositions(this.getTime());
+                    for (row = 0; row < this.blockHeight; row++) {
+                        for (column = 0; column < this.blockWidth; column++) {
+                            if (!this.checkCommandExists(commands, row, column)) {
+                                commands.push([row, column, 45, 135]);
+                            }
+                        }
+                    }
+                break;
+            default:
+                commands = this.getTimePositions(this.getTime());
+                for (row = 0; row < this.blockHeight; row++) {
+                    for (column = 0; column < this.blockWidth; column++) {
+                        if (!this.checkCommandExists(commands, row, column)) {
+                            commands.push([row, column, 45, 135]);
+                        }
+                    }
                 }
-            }
+                break;
         }
         return commands;
     },
@@ -385,7 +401,7 @@ var clockWall = {
         try {
             return +document.querySelector(selector).style.transform.match(/\d+/g)[0];
         }
-        catch(err) {
+        catch (err) {
             console.error(err, selector)
         }
     },
@@ -467,7 +483,7 @@ var clockWall = {
                 unit.appendChild(face);
 
                 var delayFactor = 1;
-                var delay = ((Math.abs((this.blockHeight / 2) - row) / (this.blockHeight / 2)) * delayFactor) + ((Math.abs((this.blockWidth / 2) - column) / (this.blockWidth / 2)) * 3 * delayFactor);
+                var delay = ((Math.abs((this.blockHeight / 2) - row) / (this.blockHeight / 2)) * delayFactor * this.blockHeight / this.blockWidth) + ((Math.abs((this.blockWidth / 2) - column) / (this.blockWidth / 2)) * (this.blockWidth / this.blockWidth) * delayFactor);
 
                 var hand1 = document.createElement('div');
                 hand1.className = 'hand hand1';
