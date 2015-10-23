@@ -1,7 +1,7 @@
 var clockWall = {
     time: null,
     blockWidth: 29,
-    blockHeight: 18,
+    blockHeight: 16,
     mode: 'time',
 
     decode: function (string) {
@@ -508,4 +508,10 @@ var clockWall = {
 clockWall.initialize();
 window.addEventListener('resize', function () {
     clockWall.resize();
+});
+window.addEventListener('blur', function () {
+    clockWall.stop();
+});
+window.addEventListener('focus', function () {
+    clockWall.start();
 });
