@@ -5,8 +5,8 @@ var clockWall = {
 
     getTime: function () {
         var date = new Date(),
-            hours = date.getHours() > 10 ? date.getHours() : "0" + date.getHours(),
-            minutes = date.getMinutes() > 10 ? date.getMinutes() : "0" + date.getMinutes();
+            hours = date.getHours() >= 10 ? date.getHours() : "0" + date.getHours(),
+            minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
         return hours + ":" + minutes;
     },
 
@@ -356,7 +356,12 @@ var clockWall = {
     },
 
     getRotation: function (selector) {
-        return +document.querySelector(selector).style.transform.match(/\d+/g)[0]
+        try {
+            return +document.querySelector(selector).style.transform.match(/\d+/g)[0];
+        }
+        catch(err) {
+            console.error(err, selector)
+        }
     },
 
     moveTo: function (x, y, one, two) {
