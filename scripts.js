@@ -2,7 +2,7 @@ var clockWall = {
     time: null,
     blockWidth: 29,
     blockHeight: 16,
-    mode: 'time',
+    mode: 'time12',
 
     decode: function (string) {
         return JSON.parse(atob(string));
@@ -24,11 +24,26 @@ var clockWall = {
         return false;
     },
 
-    getTime: function () {
+    getTime: function (mode) {
         var date = new Date(),
-            hours = date.getHours() >= 10 ? date.getHours() : "0" + date.getHours(),
-            minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
-        return hours + ":" + minutes;
+            hours, minutes;
+        switch (mode) {
+            case "time24":
+                hours = date.getHours() >= 10 ? date.getHours() : "0" + date.getHours();
+                minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
+                return hours + ":" + minutes;
+                break;
+            case "time12":
+                hours = date.getHours() > 12 ? 24 - date.getHours() : date.getHours();
+                minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
+                return hours + ":" + minutes;
+                break;
+            default:
+                hours = date.getHours() >= 10 ? date.getHours() : "0" + date.getHours();
+                minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
+                return hours + ":" + minutes;
+                break;
+        }
     },
 
     checkCommandExists: function (commandList, x, y) {
@@ -42,18 +57,40 @@ var clockWall = {
     getPositions: function () {
         var commands, row, column;
         switch (this.mode) {
-            case "time":
-                commands = this.getTimePositions(this.getTime());
-                    for (row = 0; row < this.blockHeight; row++) {
-                        for (column = 0; column < this.blockWidth; column++) {
-                            if (!this.checkCommandExists(commands, row, column)) {
-                                commands.push([row, column, 45, 135]);
-                            }
+            case "time24":
+                commands = this.getCharPositions(this.getTime(this.mode));
+                for (row = 0; row < this.blockHeight; row++) {
+                    for (column = 0; column < this.blockWidth; column++) {
+                        if (!this.checkCommandExists(commands, row, column)) {
+                            commands.push([row, column, 45, 135]);
                         }
                     }
+                }
+                break;
+            case "time12":
+                commands = this.getCharPositions(this.getTime(this.mode));
+                for (row = 0; row < this.blockHeight; row++) {
+                    for (column = 0; column < this.blockWidth; column++) {
+                        if (!this.checkCommandExists(commands, row, column)) {
+                            commands.push([row, column, 45, 135]);
+                        }
+                    }
+                }
+                break;
+            case "test":
+                commands = this.getCharPositions(this.getTime(this.mode));
+                commands = commands.concat(this.getCharPositions("ABCDE", 9));
+                for (row = 0; row < this.blockHeight; row++) {
+                    for (column = 0; column < this.blockWidth; column++) {
+                        if (!this.checkCommandExists(commands, row, column)) {
+                            commands.push([row, column, 45, 135]);
+                        }
+                    }
+                }
+
                 break;
             default:
-                commands = this.getTimePositions(this.getTime());
+                commands = this.getCharPositions(this.getTime(this.mode));
                 for (row = 0; row < this.blockHeight; row++) {
                     for (column = 0; column < this.blockWidth; column++) {
                         if (!this.checkCommandExists(commands, row, column)) {
@@ -66,11 +103,12 @@ var clockWall = {
         return commands;
     },
 
-    getTimePositions: function (string) {
+    getCharPositions: function (string, offsetY) {
         var commands = [];
-        var offsetX = 3;
+        var offsetX = 3,
+            y = offsetY || 2;
         for (var i = 0; i < string.length; i++) {
-            commands = commands.concat(this.getOffset(string[i], offsetX, 2));
+            commands = commands.concat(this.getOffset(string[i], offsetX, y));
             if (string[i] === ":") {
                 offsetX += 2
             } else if (string[i] === '1') {
@@ -93,233 +131,19 @@ var clockWall = {
 
     getNumber: function (key) {
         var map = {
-            "0": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 270, 180],
-                [1, 4, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [2, 3, 0, 180],
-                [2, 4, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [3, 3, 0, 180],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 0, 180],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "1": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 180, 90],
-                [1, 0, 90, 0],
-                [1, 1, 270, 180],
-                [1, 2, 0, 180],
-                [2, 1, 0, 180],
-                [2, 2, 0, 180],
-                [3, 1, 0, 180],
-                [3, 2, 0, 180],
-                [4, 0, 90, 180],
-                [4, 1, 0, 90],
-                [4, 2, 90, 0],
-                [4, 3, 180, 90],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 0, 90]
-            ],
-            "2": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 270],
-                [1, 1, 90, 90],
-                [1, 2, 90, 90],
-                [1, 3, 270, 180],
-                [1, 4, 0, 180],
-                [2, 0, 90, 180],
-                [2, 1, 90, 90],
-                [2, 2, 90, 90],
-                [2, 3, 0, 90],
-                [2, 4, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 90, 180],
-                [3, 2, 90, 90],
-                [3, 3, 90, 90],
-                [3, 4, 0, 90],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 90, 90],
-                [4, 4, 180, 90],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "3": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 270],
-                [1, 1, 90, 90],
-                [1, 2, 90, 90],
-                [1, 3, 270, 180],
-                [1, 4, 0, 180],
-                [2, 0, 90, 180],
-                [2, 1, 90, 90],
-                [2, 2, 90, 90],
-                [2, 3, 0, 90],
-                [2, 4, 0, 180],
-                [3, 0, 0, 270],
-                [3, 1, 90, 90],
-                [3, 2, 90, 90],
-                [3, 3, 270, 180],
-                [3, 4, 0, 180],
-                [4, 0, 90, 180],
-                [4, 1, 90, 90],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 0, 180],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "4": [
-                [0, 0, 90, 180],
-                [0, 1, 180, 90],
-                [0, 2, 90, 180],
-                [0, 3, 180, 90],
-                [1, 0, 180, 0],
-                [1, 1, 180, 0],
-                [1, 2, 180, 0],
-                [1, 3, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 0, 90],
-                [2, 3, 0, 270],
-                [2, 4, 180, 90],
-                [3, 0, 90, 0],
-                [3, 1, 90, 90],
-                [3, 2, 180, 90],
-                [3, 3, 90, 180],
-                [3, 4, 0, 90],
-                [4, 2, 180, 0],
-                [4, 3, 0, 180],
-                [5, 2, 90, 0],
-                [5, 3, 0, 90]
-            ],
-            "5": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 90, 90],
-                [1, 4, 0, 90],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 90, 90],
-                [2, 3, 90, 90],
-                [2, 4, 180, 90],
-                [3, 0, 90, 0],
-                [3, 1, 90, 90],
-                [3, 2, 90, 90],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 90, 180],
-                [4, 1, 90, 90],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "6": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 90, 90],
-                [1, 4, 0, 90],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 90, 90],
-                [2, 3, 90, 90],
-                [2, 4, 180, 90],
-                [3, 0, 0, 180],
-                [3, 1, 90, 180],
-                [3, 2, 90, 90],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "7": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 270],
-                [1, 1, 90, 90],
-                [1, 2, 90, 90],
-                [1, 3, 270, 135],
-                [1, 4, 0, 135],
-                [2, 1, 90, 180],
-                [2, 2, 45, 90],
-                [2, 3, 45, 270],
-                [2, 4, 180, 90],
-                [3, 1, 90, 0],
-                [3, 2, 180, 90],
-                [3, 3, 90, 180],
-                [3, 4, 0, 90],
-                [4, 2, 180, 0],
-                [4, 3, 0, 180],
-                [5, 2, 90, 0],
-                [5, 3, 0, 90]
-            ],
-            "8": [
+            "0": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDI3MCwxODBdLFsxLDQsMCwxODBdLFsyLDAsMCwxODBdLFsyLDEsMCwxODBdLFsyLDMsMCwxODBdLFsyLDQsMCwxODBdLFszLDAsMCwxODBdLFszLDEsMCwxODBdLFszLDMsMCwxODBdLFszLDQsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsOTAsMF0sWzQsMiw5MCw5MF0sWzQsMywwLDkwXSxbNCw0LDAsMTgwXSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsOTAsOTBdLFs1LDQsMCw5MF1d",
+            "1": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDE4MCw5MF0sWzEsMCw5MCwwXSxbMSwxLDI3MCwxODBdLFsxLDIsMCwxODBdLFsyLDEsMCwxODBdLFsyLDIsMCwxODBdLFszLDEsMCwxODBdLFszLDIsMCwxODBdLFs0LDAsOTAsMTgwXSxbNCwxLDAsOTBdLFs0LDIsOTAsMF0sWzQsMywxODAsOTBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMywwLDkwXV0=",
+            "2": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwyNzBdLFsxLDEsOTAsOTBdLFsxLDIsOTAsOTBdLFsxLDMsMjcwLDE4MF0sWzEsNCwwLDE4MF0sWzIsMCw5MCwxODBdLFsyLDEsOTAsOTBdLFsyLDIsOTAsOTBdLFsyLDMsMCw5MF0sWzIsNCwwLDE4MF0sWzMsMCwwLDE4MF0sWzMsMSw5MCwxODBdLFszLDIsOTAsOTBdLFszLDMsOTAsOTBdLFszLDQsMCw5MF0sWzQsMCwwLDE4MF0sWzQsMSw5MCwwXSxbNCwyLDkwLDkwXSxbNCwzLDkwLDkwXSxbNCw0LDE4MCw5MF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "3": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwyNzBdLFsxLDEsOTAsOTBdLFsxLDIsOTAsOTBdLFsxLDMsMjcwLDE4MF0sWzEsNCwwLDE4MF0sWzIsMCw5MCwxODBdLFsyLDEsOTAsOTBdLFsyLDIsOTAsOTBdLFsyLDMsMCw5MF0sWzIsNCwwLDE4MF0sWzMsMCwwLDI3MF0sWzMsMSw5MCw5MF0sWzMsMiw5MCw5MF0sWzMsMywyNzAsMTgwXSxbMyw0LDAsMTgwXSxbNCwwLDkwLDE4MF0sWzQsMSw5MCw5MF0sWzQsMiw5MCw5MF0sWzQsMywwLDkwXSxbNCw0LDAsMTgwXSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsOTAsOTBdLFs1LDQsMCw5MF1d",
+            "4": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMiw5MCwxODBdLFswLDMsMTgwLDkwXSxbMSwwLDE4MCwwXSxbMSwxLDE4MCwwXSxbMSwyLDE4MCwwXSxbMSwzLDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDkwLDBdLFsyLDIsMCw5MF0sWzIsMywwLDI3MF0sWzIsNCwxODAsOTBdLFszLDAsOTAsMF0sWzMsMSw5MCw5MF0sWzMsMiwxODAsOTBdLFszLDMsOTAsMTgwXSxbMyw0LDAsOTBdLFs0LDIsMTgwLDBdLFs0LDMsMCwxODBdLFs1LDIsOTAsMF0sWzUsMywwLDkwXV0=",
+            "5": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMyw5MCw5MF0sWzIsNCwxODAsOTBdLFszLDAsOTAsMF0sWzMsMSw5MCw5MF0sWzMsMiw5MCw5MF0sWzMsMywxODAsOTBdLFszLDQsMCwxODBdLFs0LDAsOTAsMTgwXSxbNCwxLDkwLDkwXSxbNCwyLDkwLDkwXSxbNCwzLDAsOTBdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
+            "6": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMyw5MCw5MF0sWzIsNCwxODAsOTBdLFszLDAsMCwxODBdLFszLDEsOTAsMTgwXSxbMywyLDkwLDkwXSxbMywzLDE4MCw5MF0sWzMsNCwwLDE4MF0sWzQsMCwwLDE4MF0sWzQsMSw5MCwwXSxbNCwyLDkwLDkwXSxbNCwzLDAsOTBdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
+            "7": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwyNzBdLFsxLDEsOTAsOTBdLFsxLDIsOTAsOTBdLFsxLDMsMjcwLDEzNV0sWzEsNCwwLDEzNV0sWzIsMSw5MCwxODBdLFsyLDIsNDUsOTBdLFsyLDMsNDUsMjcwXSxbMiw0LDE4MCw5MF0sWzMsMSw5MCwwXSxbMywyLDE4MCw5MF0sWzMsMyw5MCwxODBdLFszLDQsMCw5MF0sWzQsMiwxODAsMF0sWzQsMywwLDE4MF0sWzUsMiw5MCwwXSxbNSwzLDAsOTBdXQ==",
+            "8": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDI3MCwxODBdLFsxLDQsMCwxODBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMywwLDkwXSxbMiw0LDAsMTgwXSxbMywwLDAsMTgwXSxbMywxLDkwLDE4MF0sWzMsMiw5MCw5MF0sWzMsMywxODAsOTBdLFszLDQsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsOTAsMF0sWzQsMiw5MCw5MF0sWzQsMywwLDkwXSxbNCw0LDAsMTgwXSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsOTAsOTBdLFs1LDQsMCw5MF1d",
+            "9": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDE4MCw5MF0sWzEsNCwwLDE4MF0sWzIsMCwwLDE4MF0sWzIsMSw5MCwwXSxbMiwyLDkwLDkwXSxbMiwzLDAsOTBdLFsyLDQsMTgwLDBdLFszLDAsOTAsMF0sWzMsMSw5MCw5MF0sWzMsMiw5MCw5MF0sWzMsMywxODAsOTBdLFszLDQsMCwxODBdLFs0LDAsOTAsMTgwXSxbNCwxLDkwLDkwXSxbNCwyLDkwLDkwXSxbNCwzLDAsOTBdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
+            ":": "W1sxLDAsOTAsMTgwXSxbMSwxLDE4MCw5MF0sWzIsMCw5MCwwXSxbMiwxLDAsOTBdLFszLDAsOTAsMTgwXSxbMywxLDE4MCw5MF0sWzQsMCw5MCwwXSxbNCwxLDAsOTBdXQ==",
+            "A": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDI3MCwxODBdLFsxLDQsMCwxODBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMywwLDkwXSxbMiw0LDAsMTgwXSxbMywwLDAsMTgwXSxbMywxLDkwLDE4MF0sWzMsMiw5MCw5MF0sWzMsMywxODAsOTBdLFszLDQsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsMTgwLDBdLFs0LDMsMCwxODBdLFs0LDQsMCwxODBdLFs1LDAsOTAsMF0sWzUsMSwwLDkwXSxbNSwzLDkwLDBdLFs1LDQsMCw5MF1d",
+            "B": [
                 [0, 0, 90, 180],
                 [0, 1, 90, 90],
                 [0, 2, 90, 90],
@@ -351,39 +175,27 @@ var clockWall = {
                 [5, 3, 90, 90],
                 [5, 4, 0, 90]
             ],
-            "9": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 180, 90],
-                [1, 4, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 90, 90],
-                [2, 3, 0, 90],
-                [2, 4, 180, 0],
-                [3, 0, 90, 0],
-                [3, 1, 90, 90],
-                [3, 2, 90, 90],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 90, 180],
-                [4, 1, 90, 90],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
+            "C": [
+                [1, 0, 90, 180],
+                [1, 1, 180, 90],
+                [2, 0, 90, 0],
+                [2, 1, 0, 90],
+                [3, 0, 90, 180],
+                [3, 1, 180, 90],
+                [4, 0, 90, 0],
+                [4, 1, 0, 90]
             ],
-            ":": [
+            "D": [
+                [1, 0, 90, 180],
+                [1, 1, 180, 90],
+                [2, 0, 90, 0],
+                [2, 1, 0, 90],
+                [3, 0, 90, 180],
+                [3, 1, 180, 90],
+                [4, 0, 90, 0],
+                [4, 1, 0, 90]
+            ],
+            "E": [
                 [1, 0, 90, 180],
                 [1, 1, 180, 90],
                 [2, 0, 90, 0],
@@ -394,7 +206,11 @@ var clockWall = {
                 [4, 1, 0, 90]
             ]
         };
-        return map[key];
+        if (typeof map[key] === "string") {
+            return this.decode(map[key])
+        } else if (typeof map[key] === 'object') {
+            return map[key];
+        }
     },
 
     getRotation: function (selector) {
@@ -501,6 +317,7 @@ var clockWall = {
         if (this.getUrlParameter('theme') === 'dark') {
             this.body.className = 'dark';
         }
+        this.mode = this.getUrlParameter("mode") || "time24";
         this.start();
     }
 };
