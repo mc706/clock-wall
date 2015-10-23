@@ -3,6 +3,26 @@ var clockWall = {
     blockWidth: 29,
     blockHeight: 10,
 
+    decode: function (string) {
+        return JSON.parse(atob(string));
+    },
+
+    encode: function (obj) {
+        return btoa(JSON.stringify(obj));
+    },
+
+    getUrlParameter: function (sParam) {
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+            var sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1];
+            }
+        }
+        return false;
+    },
+
     getTime: function () {
         var date = new Date(),
             hours = date.getHours() >= 10 ? date.getHours() : "0" + date.getHours(),
@@ -462,8 +482,10 @@ var clockWall = {
 
             }
         }
+        if (this.getUrlParameter('theme') === 'dark') {
+            this.body.className = 'dark';
+        }
         this.start();
-
     }
 };
 
