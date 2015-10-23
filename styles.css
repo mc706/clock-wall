@@ -1,0 +1,40 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%; }
+
+body {
+  position: relative; }
+
+.clock-container {
+  position: absolute; }
+
+.clock {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 1px 2px rgba(0, 0, 0, 0.3); }
+
+.hand {
+  position: absolute;
+  width: 2px;
+  /* default width of hands/ hour hand */
+  height: 40%;
+  /* default height of hands/ hour hand */
+  top: 10%;
+  /* offset hand vertically by 20% so its bottom is at center of clock */
+  left: 50%;
+  /* offset hand horiz by 50% so its left is at center of clock */
+  margin-left: -1px;
+  /* Account for hand width to center hand horizonally */
+  background: black;
+  transform: rotate(0deg);
+  transform-origin: bottom;
+  transition-duration: 4s;
+  transition-property: transform;
+  transition-timing-function: linear; }
+
+/*# sourceMappingURL=styles.css.map */
