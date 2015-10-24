@@ -3,6 +3,7 @@ var clockWall = {
     blockWidth: 29,
     blockHeight: 16,
     mode: 'time12',
+    iteration: 0,
 
     decode: function (string) {
         return JSON.parse(atob(string));
@@ -59,47 +60,51 @@ var clockWall = {
         switch (this.mode) {
             case "time24":
                 commands = this.getCharPositions(this.getTime(this.mode));
-                for (row = 0; row < this.blockHeight; row++) {
-                    for (column = 0; column < this.blockWidth; column++) {
-                        if (!this.checkCommandExists(commands, row, column)) {
-                            commands.push([row, column, 45, 135]);
-                        }
-                    }
-                }
                 break;
             case "time12":
                 commands = this.getCharPositions(this.getTime(this.mode));
-                for (row = 0; row < this.blockHeight; row++) {
-                    for (column = 0; column < this.blockWidth; column++) {
-                        if (!this.checkCommandExists(commands, row, column)) {
-                            commands.push([row, column, 45, 135]);
-                        }
-                    }
-                }
                 break;
-            case "test":
-                commands = this.getCharPositions(this.getTime(this.mode));
-                commands = commands.concat(this.getCharPositions("JKLMN", 9));
-                for (row = 0; row < this.blockHeight; row++) {
-                    for (column = 0; column < this.blockWidth; column++) {
-                        if (!this.checkCommandExists(commands, row, column)) {
-                            commands.push([row, column, 45, 135]);
-                        }
-                    }
-                }
+            case "rotating":
+                var date = new Date();
+                this.iteration += 1;
 
+                switch (this.iteration % 2) {
+                    case 0:
+                        // time and day of week
+                        commands = this.getCharPositions(this.getTime(this.mode));
+                        var weekdays = {
+                            0: "SUN",
+                            1: "MON",
+                            2: "TUES",
+                            3: "WED",
+                            4: "THUR",
+                            5: "FRI",
+                            6: "SAT"
+                        };
+                        commands = commands.concat(this.getCharPositions(weekdays[date.getDay()], 9));
+                        break;
+                    case 1:
+                        var str = date.toDateString().substr(4, 6).toUpperCase().replace(' ', '');
+                        console.log(str);
+                        commands = this.getCharPositions(str);
+                        commands = commands.concat(this.getCharPositions(date.getFullYear() + "", 9));
+                        break;
+                }
                 break;
+
             default:
                 commands = this.getCharPositions(this.getTime(this.mode));
-                for (row = 0; row < this.blockHeight; row++) {
-                    for (column = 0; column < this.blockWidth; column++) {
-                        if (!this.checkCommandExists(commands, row, column)) {
-                            commands.push([row, column, 45, 135]);
-                        }
-                    }
-                }
                 break;
+
         }
+        for (row = 0; row < this.blockHeight; row++) {
+            for (column = 0; column < this.blockWidth; column++) {
+                if (!this.checkCommandExists(commands, row, column)) {
+                    commands.push([row, column, 45, 135]);
+                }
+            }
+        }
+        console.info('command', commands.length);
         return commands;
     },
 
@@ -111,7 +116,7 @@ var clockWall = {
             commands = commands.concat(this.getOffset(string[i], offsetX, y));
             if (string[i] === ":") {
                 offsetX += 2
-            } else if (string[i] === '1') {
+            } else if (["1", "T"].indexOf(string[i]) !== -1) {
                 offsetX += 4
             } else {
                 offsetX += 5
@@ -147,241 +152,27 @@ var clockWall = {
             "C": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsMCwxODBdLFszLDAsMCwxODBdLFszLDEsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsOTAsMF0sWzQsMiw5MCw5MF0sWzQsMyw5MCw5MF0sWzQsNCwxODAsOTBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
             "D": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDEzNSw5MF0sWzEsMCwwLDE4MF0sWzEsMSw5MCwxODBdLFsxLDIsOTAsOTBdLFsxLDMsMjcwLDE4MF0sWzEsNCwxODAsNDVdLFsyLDAsMCwxODBdLFsyLDEsMCwxODBdLFsyLDMsMCwxODBdLFsyLDQsMCwxODBdLFszLDAsMCwxODBdLFszLDEsMCwxODBdLFszLDMsMTgwLDBdLFszLDQsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsOTAsMF0sWzQsMiw5MCw5MF0sWzQsMywwLDkwXSxbNCw0LDAsMTM1XSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsNDUsOTBdXQ==",
             "E": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMywxODAsOTBdLFszLDAsMCwxODBdLFszLDEsOTAsMTgwXSxbMywyLDkwLDkwXSxbMywzLDAsOTBdLFs0LDAsMCwxODBdLFs0LDEsOTAsMF0sWzQsMiw5MCw5MF0sWzQsMyw5MCw5MF0sWzQsNCwxODAsOTBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
-            "F": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 90, 90],
-                [1, 4, 0, 90],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 90, 90],
-                [2, 3, 180, 90],
-                [3, 0, 0, 180],
-                [3, 1, 90, 180],
-                [3, 2, 90, 90],
-                [3, 3, 0, 90],
-                [4, 0, 0, 180],
-                [4, 1, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 0, 90]
-            ],
-            "G": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 90, 90],
-                [1, 4, 0, 90],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [2, 2, 90, 180],
-                [2, 3, 90, 90],
-                [2, 4, 180, 90],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [3, 2, 90, 0],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "H": [
-                [0, 0, 90, 180],
-                [0, 1, 180, 90],
-                [0, 3, 90, 180],
-                [0, 4, 180, 90],
-                [1, 0, 0, 180],
-                [1, 1, 0, 180],
-                [1, 3, 0, 180],
-                [1, 4, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 90, 0],
-                [2, 2, 90, 90],
-                [2, 3, 0, 90],
-                [2, 4, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 90, 180],
-                [3, 2, 90, 90],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 180, 0],
-                [4, 3, 0, 180],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 0, 90],
-                [5, 3, 90, 0],
-                [5, 4, 0, 90]
-            ],
-            "J": [
-                [0, 3, 90, 180],
-                [0, 4, 180, 90],
-                [1, 3, 0, 180],
-                [1, 4, 0, 180],
-                [2, 3, 0, 180],
-                [2, 4, 0, 180],
-                [3, 0, 90, 180],
-                [3, 1, 180, 90],
-                [3, 3, 0, 180],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "K": [
-                [0, 0, 90, 180],
-                [0, 1, 180, 90],
-                [1, 0, 0, 180],
-                [1, 1, 0, 180],
-                [1, 2, 90, 135],
-                [1, 3, 270, 135],
-                [2, 0, 0, 180],
-                [2, 1, 45, 0],
-                [3, 0, 0, 180],
-                [3, 1, 135, 180],
-                [3, 2, 135, 45],
-                [4, 0, 0, 180],
-                [4, 1, 180, 0],
-                [4, 2, 135, 45],
-                [4, 3, 135, 45],
-                [5, 0, 90, 0],
-                [5, 1, 0, 90],
-                [5, 3, 90, 45],
-                [5, 4, 270, 45]
-            ],
-            "L": [
-                [0, 0, 90, 180],
-                [0, 1, 180, 90],
-                [1, 0, 0, 180],
-                [1, 1, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 90, 90],
-                [4, 4, 180, 90],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
-            "M": [
-                [0, 0, 90, 180],
-                [0, 1, 135, 90],
-                [0, 3, 90, 135],
-                [0, 4, 180, 90],
-                [1, 0, 0, 180],
-                [1, 1, 135, 180],
-                [1, 2, 45, 45],
-                [1, 3, 180, 135],
-                [1, 4, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [2, 2, 45, 45],
-                [2, 3, 0, 180],
-                [2, 4, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [3, 3, 180, 0],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 180, 0],
-                [4, 3, 0, 180],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 0, 90],
-                [5, 3, 90, 0],
-                [5, 4, 0, 90]
-            ],
-            "N": [
-                [0, 0, 90, 180],
-                [0, 1, 135, 90],
-                [0, 3, 90, 180],
-                [0, 4, 180, 90],
-                [1, 0, 0, 180],
-                [1, 1, 135, 180],
-                [1, 2, 135, 45],
-                [1, 3, 180, 0],
-                [1, 4, 0, 180],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [2, 2, 135, 45],
-                [2, 3, 0, 45],
-                [2, 4, 0, 180],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [3, 3, 180, 45],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 180, 0],
-                [4, 3, 0, 180],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 0, 90],
-                [5, 3, 90, 0],
-                [5, 4, 0, 90]
-            ],
-            "O": [
-                [0, 0, 90, 180],
-                [0, 1, 90, 90],
-                [0, 2, 90, 90],
-                [0, 3, 90, 90],
-                [0, 4, 270, 180],
-                [1, 0, 0, 180],
-                [1, 1, 90, 180],
-                [1, 2, 90, 90],
-                [1, 3, 90, 90],
-                [1, 4, 0, 90],
-                [2, 0, 0, 180],
-                [2, 1, 0, 180],
-                [2, 2, 90, 180],
-                [2, 3, 90, 90],
-                [2, 4, 180, 90],
-                [3, 0, 0, 180],
-                [3, 1, 0, 180],
-                [3, 2, 90, 0],
-                [3, 3, 180, 90],
-                [3, 4, 0, 180],
-                [4, 0, 0, 180],
-                [4, 1, 90, 0],
-                [4, 2, 90, 90],
-                [4, 3, 0, 90],
-                [4, 4, 180, 0],
-                [5, 0, 90, 0],
-                [5, 1, 90, 90],
-                [5, 2, 90, 90],
-                [5, 3, 90, 90],
-                [5, 4, 0, 90]
-            ],
+            "F": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMywxODAsOTBdLFszLDAsMCwxODBdLFszLDEsOTAsMTgwXSxbMywyLDkwLDkwXSxbMywzLDAsOTBdLFs0LDAsMCwxODBdLFs0LDEsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSwwLDkwXV0=",
+            "G": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsMCwxODBdLFsyLDIsOTAsMTgwXSxbMiwzLDkwLDkwXSxbMiw0LDE4MCw5MF0sWzMsMCwwLDE4MF0sWzMsMSwwLDE4MF0sWzMsMiw5MCwwXSxbMywzLDE4MCw5MF0sWzMsNCwwLDE4MF0sWzQsMCwwLDE4MF0sWzQsMSw5MCwwXSxbNCwyLDkwLDkwXSxbNCwzLDAsOTBdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
+            "H": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDAsMTgwXSxbMSwzLDAsMTgwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDkwLDBdLFsyLDIsOTAsOTBdLFsyLDMsMCw5MF0sWzIsNCwwLDE4MF0sWzMsMCwwLDE4MF0sWzMsMSw5MCwxODBdLFszLDIsOTAsOTBdLFszLDMsMTgwLDkwXSxbMyw0LDAsMTgwXSxbNCwwLDAsMTgwXSxbNCwxLDE4MCwwXSxbNCwzLDAsMTgwXSxbNCw0LDE4MCwwXSxbNSwwLDkwLDBdLFs1LDEsMCw5MF0sWzUsMyw5MCwwXSxbNSw0LDAsOTBdXQ==",
+            "J": "W1swLDMsOTAsMTgwXSxbMCw0LDE4MCw5MF0sWzEsMywwLDE4MF0sWzEsNCwwLDE4MF0sWzIsMywwLDE4MF0sWzIsNCwwLDE4MF0sWzMsMCw5MCwxODBdLFszLDEsMTgwLDkwXSxbMywzLDAsMTgwXSxbMyw0LDAsMTgwXSxbNCwwLDAsMTgwXSxbNCwxLDkwLDBdLFs0LDIsOTAsOTBdLFs0LDMsMCw5MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "K": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzEsMCwwLDE4MF0sWzEsMSwwLDE4MF0sWzEsMiw5MCwxMzVdLFsxLDMsMjcwLDEzNV0sWzIsMCwwLDE4MF0sWzIsMSw0NSwwXSxbMywwLDAsMTgwXSxbMywxLDEzNSwxODBdLFszLDIsMTM1LDQ1XSxbNCwwLDAsMTgwXSxbNCwxLDE4MCwwXSxbNCwyLDEzNSw0NV0sWzQsMywxMzUsNDVdLFs1LDAsOTAsMF0sWzUsMSwwLDkwXSxbNSwzLDkwLDQ1XSxbNSw0LDI3MCw0NV1d",
+            "L": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzEsMCwwLDE4MF0sWzEsMSwwLDE4MF0sWzIsMCwwLDE4MF0sWzIsMSwwLDE4MF0sWzMsMCwwLDE4MF0sWzMsMSwwLDE4MF0sWzQsMCwwLDE4MF0sWzQsMSw5MCwwXSxbNCwyLDkwLDkwXSxbNCwzLDkwLDkwXSxbNCw0LDE4MCw5MF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "M": "W1swLDAsOTAsMTgwXSxbMCwxLDEzNSw5MF0sWzAsMyw5MCwxMzVdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDEzNSwxODBdLFsxLDIsNDUsNDVdLFsxLDMsMTgwLDEzNV0sWzEsNCwwLDE4MF0sWzIsMCwwLDE4MF0sWzIsMSwwLDE4MF0sWzIsMiw0NSw0NV0sWzIsMywwLDE4MF0sWzIsNCwwLDE4MF0sWzMsMCwwLDE4MF0sWzMsMSwwLDE4MF0sWzMsMywxODAsMF0sWzMsNCwwLDE4MF0sWzQsMCwwLDE4MF0sWzQsMSwxODAsMF0sWzQsMywwLDE4MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDAsOTBdLFs1LDMsOTAsMF0sWzUsNCwwLDkwXV0=",
+            "N": "W1swLDAsOTAsMTgwXSxbMCwxLDEzNSw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDEzNSwxODBdLFsxLDIsMTM1LDQ1XSxbMSwzLDE4MCwwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwyLDEzNSw0NV0sWzIsMywwLDQ1XSxbMiw0LDAsMTgwXSxbMywwLDAsMTgwXSxbMywxLDAsMTgwXSxbMywzLDE4MCw0NV0sWzMsNCwwLDE4MF0sWzQsMCwwLDE4MF0sWzQsMSwxODAsMF0sWzQsMywwLDE4MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDAsOTBdLFs1LDMsOTAsMF0sWzUsNCwwLDkwXV0=",
+            "O": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDE4MCw5MF0sWzEsMCwwLDE4MF0sWzEsMSw5MCwxODBdLFsxLDIsOTAsOTBdLFsxLDMsMTgwLDkwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwzLDAsMTgwXSxbMiw0LDE4MCwwXSxbMywwLDAsMTgwXSxbMywxLDAsMTgwXSxbMywzLDE4MCwwXSxbMyw0LDAsMTgwXSxbNCwwLDAsMTgwXSxbNCwxLDkwLDBdLFs0LDIsOTAsOTBdLFs0LDMsMCw5MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "P": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDE4MCw5MF0sWzEsNCwwLDE4MF0sWzIsMCwwLDE4MF0sWzIsMSw5MCwwXSxbMiwyLDkwLDkwXSxbMiwzLDAsOTBdLFsyLDQsMCwxODBdLFszLDAsMCwxODBdLFszLDEsOTAsMTgwXSxbMywyLDkwLDkwXSxbMywzLDkwLDkwXSxbMyw0LDAsOTBdLFs0LDAsMCwxODBdLFs0LDEsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSwwLDkwXV0=",
+            "Q": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDE4MCw5MF0sWzEsMCwwLDE4MF0sWzEsMSw5MCwxODBdLFsxLDIsOTAsOTBdLFsxLDMsMTgwLDkwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwzLDAsMTgwXSxbMiw0LDE4MCwwXSxbMywwLDAsMTgwXSxbMywxLDAsMTgwXSxbMywzLDAsMTM1XSxbMyw0LDAsMTgwXSxbNCwwLDAsMTgwXSxbNCwxLDkwLDBdLFs0LDIsOTAsOTBdLFs0LDMsMjcwLDQ1XSxbNCw0LDEzNSwwXSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsOTAsOTBdLFs1LDQsOTAsOTBdXQ==",
+            "R": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDE4MCw5MF0sWzEsNCwwLDE4MF0sWzIsMCwwLDE4MF0sWzIsMSw5MCwwXSxbMiwyLDkwLDkwXSxbMiwzLDAsOTBdLFsyLDQsMCwxODBdLFszLDAsMCwxODBdLFszLDEsMTM1LDE4MF0sWzMsMiwxMzUsMjcwXSxbMywzLDkwLDkwXSxbMyw0LDAsOTBdLFs0LDAsMCwxODBdLFs0LDEsMTgwLDBdLFs0LDIsMTM1LDQ1XSxbNCwzLDEzNSw0NV0sWzUsMCw5MCwwXSxbNSwxLDAsOTBdLFs1LDMsOTAsNDVdLFs1LDQsMjcwLDQ1XV0=",
+            "S": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwxODBdLFsxLDEsOTAsMTgwXSxbMSwyLDkwLDkwXSxbMSwzLDkwLDkwXSxbMSw0LDAsOTBdLFsyLDAsMCwxODBdLFsyLDEsOTAsMF0sWzIsMiw5MCw5MF0sWzIsMyw5MCw5MF0sWzIsNCwxODAsOTBdLFszLDAsOTAsMF0sWzMsMSw5MCw5MF0sWzMsMiw5MCw5MF0sWzMsMywxODAsOTBdLFszLDQsMCwxODBdLFs0LDAsOTAsMTgwXSxbNCwxLDkwLDkwXSxbNCwyLDkwLDkwXSxbNCwzLDAsOTBdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw5MCw5MF0sWzUsMiw5MCw5MF0sWzUsMyw5MCw5MF0sWzUsNCwwLDkwXV0=",
+            "T": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDE4MCw5MF0sWzEsMCw5MCwwXSxbMSwxLDE4MCw5MF0sWzEsMiw5MCwxODBdLFsxLDMsMCw5MF0sWzIsMSwwLDE4MF0sWzIsMiwwLDE4MF0sWzMsMSwwLDE4MF0sWzMsMiwwLDE4MF0sWzQsMSwwLDE4MF0sWzQsMiwwLDE4MF0sWzUsMSw5MCwwXSxbNSwyLDAsOTBdXQ==",
+            "U": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDAsMTgwXSxbMSwzLDE4MCwwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwzLDAsMTgwXSxbMiw0LDE4MCwwXSxbMywwLDAsMTgwXSxbMywxLDAsMTgwXSxbMywzLDE4MCwwXSxbMyw0LDAsMTgwXSxbNCwwLDAsMTgwXSxbNCwxLDkwLDBdLFs0LDIsOTAsOTBdLFs0LDMsMCw5MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "V": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDAsMTgwXSxbMSwzLDE4MCwwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwzLDAsMTgwXSxbMiw0LDE4MCwwXSxbMywwLDEzNSwwXSxbMywxLDEzNSwwXSxbMywzLDAsMTM1XSxbMyw0LDAsMTM1XSxbNCwxLDEzNSw0NV0sWzQsMiw0NSw0NV0sWzQsMyw0NSwxMzVdLFs1LDIsNDUsNDVdXQ==",
+            "W": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDAsMTgwXSxbMSwzLDE4MCwwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDAsMTgwXSxbMiwzLDAsMTgwXSxbMiw0LDE4MCwwXSxbMywwLDAsMTgwXSxbMywxLDAsMTgwXSxbMywyLDEzNSwxMzVdLFszLDMsMTgwLDBdLFszLDQsMCwxODBdLFs0LDAsMCwxODBdLFs0LDEsNDUsMF0sWzQsMiwxMzUsMTM1XSxbNCwzLDAsNDVdLFs0LDQsMTgwLDBdLFs1LDAsOTAsMF0sWzUsMSw0NSw5MF0sWzUsMyw5MCw0NV0sWzUsNCwwLDkwXV0=",
+            "X": "W1swLDAsOTAsMTgwXSxbMCwxLDEzNSw5MF0sWzAsMyw5MCwxMzVdLFswLDQsMTgwLDkwXSxbMSwwLDkwLDBdLFsxLDEsMTM1LDkwXSxbMSwyLDQ1LDQ1XSxbMSwzLDkwLDEzNV0sWzEsNCwwLDkwXSxbMiwyLDQ1LDQ1XSxbMywyLDEzNSwxMzVdLFs0LDAsOTAsMTgwXSxbNCwxLDQ1LDkwXSxbNCwyLDEzNSwxMzVdLFs0LDMsOTAsNDVdLFs0LDQsMTgwLDkwXSxbNSwwLDkwLDBdLFs1LDEsNDUsOTBdLFs1LDMsOTAsNDVdLFs1LDQsMCw5MF1d",
+            "Y": "W1swLDAsOTAsMTgwXSxbMCwxLDE4MCw5MF0sWzAsMyw5MCwxODBdLFswLDQsMTgwLDkwXSxbMSwwLDAsMTgwXSxbMSwxLDAsMTgwXSxbMSwzLDAsMTgwXSxbMSw0LDAsMTgwXSxbMiwwLDAsMTgwXSxbMiwxLDkwLDBdLFsyLDIsOTAsOTBdLFsyLDMsMCw5MF0sWzIsNCwwLDE4MF0sWzMsMCw5MCwwXSxbMywxLDkwLDkwXSxbMywyLDkwLDkwXSxbMywzLDE4MCw5MF0sWzMsNCwwLDE4MF0sWzQsMCw5MCwxODBdLFs0LDEsOTAsOTBdLFs0LDIsOTAsOTBdLFs0LDMsMCw5MF0sWzQsNCwxODAsMF0sWzUsMCw5MCwwXSxbNSwxLDkwLDkwXSxbNSwyLDkwLDkwXSxbNSwzLDkwLDkwXSxbNSw0LDAsOTBdXQ==",
+            "Z": "W1swLDAsOTAsMTgwXSxbMCwxLDkwLDkwXSxbMCwyLDkwLDkwXSxbMCwzLDkwLDkwXSxbMCw0LDI3MCwxODBdLFsxLDAsMCwyNzBdLFsxLDEsOTAsOTBdLFsxLDIsOTAsOTBdLFsxLDMsMjcwLDEzNV0sWzEsNCwwLDEzNV0sWzIsMiw0NSwxMzVdLFszLDEsNDUsMTM1XSxbNCwwLDQ1LDE4MF0sWzQsMSw0NSwyNzBdLFs0LDIsOTAsOTBdLFs0LDMsOTAsOTBdLFs0LDQsMTgwLDkwXSxbNSwwLDkwLDBdLFs1LDEsOTAsOTBdLFs1LDIsOTAsOTBdLFs1LDMsOTAsOTBdLFs1LDQsMCw5MF1d"
+
         };
         if (typeof map[key] === "string") {
             return this.decode(map[key])
@@ -416,7 +207,7 @@ var clockWall = {
 
     tick: function () {
         /* compile and execute commands */
-
+        console.log('tick');
         this.getPositions().map(function (args) {
             this.moveTo.apply(this, args);
         }.bind(this))
@@ -430,7 +221,21 @@ var clockWall = {
     },
 
     start: function () {
-        this.interval = setInterval(this.checkTime.bind(this), 1000);
+        switch (this.mode) {
+            case "rotating":
+                this.interval = setInterval(this.tick.bind(this), 15000);
+                setTimeout(this.tick.bind(this), 1000);
+                break;
+            case "time12":
+                this.interval = setInterval(this.checkTime.bind(this), 1000);
+                break;
+            case "time24":
+                this.interval = setInterval(this.checkTime.bind(this), 1000);
+                break;
+            default:
+                this.interval = setInterval(this.checkTime.bind(this), 1000);
+                break
+        }
     },
 
     stop: function () {
@@ -494,7 +299,7 @@ var clockWall = {
         if (this.getUrlParameter('theme') === 'dark') {
             this.body.className = 'dark';
         }
-        this.mode = this.getUrlParameter("mode") || "time24";
+        this.mode = this.getUrlParameter("mode") || "rotating";
         this.start();
     }
 };
