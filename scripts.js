@@ -34,7 +34,7 @@ var clockWall = {
                 return hours + ":" + minutes;
                 break;
             case "time12":
-                hours = date.getHours() > 12 ? 24 - date.getHours() : date.getHours();
+                hours = date.getHours() > 12 ? date.getHours() - 12 : date.getHours();
                 minutes = date.getMinutes() >= 10 ? date.getMinutes() : "0" + date.getMinutes();
                 return hours + ":" + minutes;
                 break;
